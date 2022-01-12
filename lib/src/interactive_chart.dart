@@ -102,132 +102,135 @@ class _InteractiveChartState extends State<InteractiveChart> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final size = constraints.biggest;
-        final w = size.width - widget.style.priceLabelWidth;
-        _handleResize(w);
+    return Container(
+      padding: EdgeInsets.only(top: 6),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final size = constraints.biggest;
+          final w = size.width - widget.style.priceLabelWidth;
+          _handleResize(w);
 
-        // Find the visible data range
-        final int start = (_startOffset / _candleWidth).floor();
-        final int count = (w / _candleWidth).ceil();
-        final int end = (start + count).clamp(start, widget.candles.length);
-        final candlesInRange = widget.candles.getRange(start, end).toList();
-        if (end < widget.candles.length) {
-          // Put in an extra item, since it can become visible when scrolling
-          final nextItem = widget.candles[end];
-          candlesInRange.add(nextItem);
-        }
+          // Find the visible data range
+          final int start = (_startOffset / _candleWidth).floor();
+          final int count = (w / _candleWidth).ceil();
+          final int end = (start + count).clamp(start, widget.candles.length);
+          final candlesInRange = widget.candles.getRange(start, end).toList();
+          if (end < widget.candles.length) {
+            // Put in an extra item, since it can become visible when scrolling
+            final nextItem = widget.candles[end];
+            candlesInRange.add(nextItem);
+          }
 
-        // If possible, find neighbouring trend line data,
-        // so the chart could draw better-connected lines
-        final leadingTrends = widget.candles.at(start - 1)?.trends;
-        final trailingTrends = widget.candles.at(end + 1)?.trends;
+          // If possible, find neighbouring trend line data,
+          // so the chart could draw better-connected lines
+          final leadingTrends = widget.candles.at(start - 1)?.trends;
+          final trailingTrends = widget.candles.at(end + 1)?.trends;
 
-        // Find the horizontal shift needed when drawing the candles.
-        // First, always shift the chart by half a candle, because when we
-        // draw a line using a thick paint, it spreads to both sides.
-        // Then, we find out how much "fraction" of a candle is visible, since
-        // when users scroll, they don't always stop at exact intervals.
-        final halfCandle = _candleWidth / 2;
-        final fractionCandle = _startOffset - start * _candleWidth;
-        final xShift = halfCandle - fractionCandle;
+          // Find the horizontal shift needed when drawing the candles.
+          // First, always shift the chart by half a candle, because when we
+          // draw a line using a thick paint, it spreads to both sides.
+          // Then, we find out how much "fraction" of a candle is visible, since
+          // when users scroll, they don't always stop at exact intervals.
+          final halfCandle = _candleWidth / 2;
+          final fractionCandle = _startOffset - start * _candleWidth;
+          final xShift = halfCandle - fractionCandle;
 
-        // Calculate min and max among the visible data
-        double? highest(CandleData c) {
-          if (c.high != null) return c.high;
-          if (c.open != null && c.close != null) return max(c.open!, c.close!);
-          return c.open ?? c.close;
-        }
+          // Calculate min and max among the visible data
+          double? highest(CandleData c) {
+            if (c.high != null) return c.high;
+            if (c.open != null && c.close != null) return max(c.open!, c.close!);
+            return c.open ?? c.close;
+          }
 
-        double? lowest(CandleData c) {
-          if (c.low != null) return c.low;
-          if (c.open != null && c.close != null) return min(c.open!, c.close!);
-          return c.open ?? c.close;
-        }
+          double? lowest(CandleData c) {
+            if (c.low != null) return c.low;
+            if (c.open != null && c.close != null) return min(c.open!, c.close!);
+            return c.open ?? c.close;
+          }
 
-        final maxPrice =
-            candlesInRange.map(highest).whereType<double>().reduce(max);
-        final minPrice =
-            candlesInRange.map(lowest).whereType<double>().reduce(min);
-        final maxVol = candlesInRange
-            .map((c) => c.volume)
-            .whereType<double>()
-            .fold(double.negativeInfinity, max);
-        final minVol = candlesInRange
-            .map((c) => c.volume)
-            .whereType<double>()
-            .fold(double.infinity, min);
+          final maxPrice =
+              candlesInRange.map(highest).whereType<double>().reduce(max);
+          final minPrice =
+              candlesInRange.map(lowest).whereType<double>().reduce(min);
+          final maxVol = candlesInRange
+              .map((c) => c.volume)
+              .whereType<double>()
+              .fold(double.negativeInfinity, max);
+          final minVol = candlesInRange
+              .map((c) => c.volume)
+              .whereType<double>()
+              .fold(double.infinity, min);
 
-        final child = TweenAnimationBuilder(
-          tween: PainterParamsTween(
-            end: PainterParams(
-              candles: candlesInRange,
-              style: widget.style,
-              size: size,
-              candleWidth: _candleWidth,
-              startOffset: _startOffset,
-              maxPrice: maxPrice,
-              minPrice: minPrice,
-              maxVol: maxVol,
-              minVol: minVol,
-              xShift: xShift,
-              tapPosition: _tapPosition,
-              leadingTrends: leadingTrends,
-              trailingTrends: trailingTrends,
-            ),
-          ),
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-          builder: (_, PainterParams params, __) {
-            _prevParams = params;
-            return RepaintBoundary(
-              child: CustomPaint(
+          final child = TweenAnimationBuilder(
+            tween: PainterParamsTween(
+              end: PainterParams(
+                candles: candlesInRange,
+                style: widget.style,
                 size: size,
-                painter: ChartPainter(
-                  params: params,
-                  getTimeLabel: widget.timeLabel ?? defaultTimeLabel,
-                  getPriceLabel: widget.priceLabel ?? defaultPriceLabel,
-                  getOverlayInfo: widget.overlayInfo ?? defaultOverlayInfo,
-                ),
+                candleWidth: _candleWidth,
+                startOffset: _startOffset,
+                maxPrice: maxPrice,
+                minPrice: minPrice,
+                maxVol: maxVol,
+                minVol: minVol,
+                xShift: xShift,
+                tapPosition: _tapPosition,
+                leadingTrends: leadingTrends,
+                trailingTrends: trailingTrends,
               ),
-            );
-          },
-        );
-
-        return Listener(
-          onPointerSignal: (signal) {
-            if (signal is PointerScrollEvent) {
-              final dy = signal.scrollDelta.dy;
-              if (dy.abs() > 0) {
-                _onScaleStart(signal.position);
-                _onScaleUpdate(
-                  dy > 0 ? 0.9 : 1.1,
-                  signal.position,
-                  w,
-                );
-              }
-            }
-          },
-          child: GestureDetector(
-            // Tap and hold to view candle details
-            onTapDown: (details) => setState(() {
-              _tapPosition = details.localPosition;
-            }),
-            onTapCancel: () => setState(() => _tapPosition = null),
-            onTapUp: (_) {
-              // Fire callback event and reset _tapPosition
-              if (widget.onTap != null) _fireOnTapEvent();
-              setState(() => _tapPosition = null);
+            ),
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            builder: (_, PainterParams params, __) {
+              _prevParams = params;
+              return RepaintBoundary(
+                child: CustomPaint(
+                  size: size,
+                  painter: ChartPainter(
+                    params: params,
+                    getTimeLabel: widget.timeLabel ?? defaultTimeLabel,
+                    getPriceLabel: widget.priceLabel ?? defaultPriceLabel,
+                    getOverlayInfo: widget.overlayInfo ?? defaultOverlayInfo,
+                  ),
+                ),
+              );
             },
-            // Pan and zoom
-            onScaleStart: (details) => _onScaleStart(details.localFocalPoint),
-            onScaleUpdate: (details) =>
-                _onScaleUpdate(details.scale, details.localFocalPoint, w),
-            child: child,
-          ),
-        );
-      },
+          );
+
+          return Listener(
+            onPointerSignal: (signal) {
+              if (signal is PointerScrollEvent) {
+                final dy = signal.scrollDelta.dy;
+                if (dy.abs() > 0) {
+                  _onScaleStart(signal.position);
+                  _onScaleUpdate(
+                    dy > 0 ? 0.9 : 1.1,
+                    signal.position,
+                    w,
+                  );
+                }
+              }
+            },
+            child: GestureDetector(
+              // Tap and hold to view candle details
+              onTapDown: (details) => setState(() {
+                _tapPosition = details.localPosition;
+              }),
+              onTapCancel: () => setState(() => _tapPosition = null),
+              onTapUp: (_) {
+                // Fire callback event and reset _tapPosition
+                if (widget.onTap != null) _fireOnTapEvent();
+                setState(() => _tapPosition = null);
+              },
+              // Pan and zoom
+              onScaleStart: (details) => _onScaleStart(details.localFocalPoint),
+              onScaleUpdate: (details) =>
+                  _onScaleUpdate(details.scale, details.localFocalPoint, w),
+              child: child,
+            ),
+          );
+        },
+      )
     );
   }
 
@@ -239,7 +242,7 @@ class _InteractiveChartState extends State<InteractiveChart> {
 
   _onScaleUpdate(double scale, Offset focalPoint, double w) {
     // Handle zoom
-    final candleWidth = (_prevCandleWidth * scale)
+    final candleWidth = (_prevCandleWidth * 1)
         .clamp(_getMinCandleWidth(w), _getMaxCandleWidth(w));
     final clampedScale = candleWidth / _prevCandleWidth;
     var startOffset = _prevStartOffset * clampedScale;
