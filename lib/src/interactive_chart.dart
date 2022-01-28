@@ -315,7 +315,7 @@ class _InteractiveChartState extends State<InteractiveChart> {
 
     if (visibleDataCount > 20) {
       // If more than 20 data points are visible, we should show year and month.
-      return "${date[0]}-${date[1]}"; // yyyy-mm
+      return "${date[2]}-${date[1]}"; // yyyy-mm
     } else {
       // Otherwise, we should show month and date.
       return "${date[1]}-${date[2]}"; // mm-dd
