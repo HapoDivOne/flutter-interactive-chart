@@ -53,7 +53,7 @@ class ChartPainter extends CustomPainter {
 
   void _drawTimeLabels(canvas, PainterParams params) {
     // We draw one time label per 90 pixels of screen width
-    final lineCount = params.chartWidth ~/ 40;
+    final lineCount = params.chartWidth ~/ 80;
     final gap = 1 / (lineCount + 1);
     for (int i = 1; i <= lineCount; i++) {
       double x = i * gap * params.chartWidth;
