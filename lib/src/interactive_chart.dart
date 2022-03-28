@@ -59,6 +59,7 @@ class InteractiveChart extends StatefulWidget {
   ///
   /// This provides the width of a candlestick at the current zoom level.
   final ValueChanged<double>? onCandleResize;
+  final bool? isShowMinuteXValue;
 
   const InteractiveChart({
     Key? key,
@@ -70,6 +71,7 @@ class InteractiveChart extends StatefulWidget {
     this.overlayInfo,
     this.onTap,
     this.onCandleResize,
+    this.isShowMinuteXValue,
   })  : this.style = style ?? const ChartStyle(),
         assert(candles.length >= 3,
             "InteractiveChart requires 3 or more CandleData"),
@@ -307,18 +309,23 @@ class _InteractiveChartState extends State<InteractiveChart> {
   }
 
   String defaultTimeLabel(int timestamp, int visibleDataCount) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp)
-        .toIso8601String()
-        .split("T")
-        .first
-        .split("-");
-
-    if (visibleDataCount > 20) {
-      // If more than 20 data points are visible, we should show year and month.
-      return "${date[1]}-${date[2]}"; // yyyy-mm
-    } else {
-      // Otherwise, we should show month and date.
-      return "${date[1]}-${date[2]}"; // mm-dd
+    if(widget.isShowMinuteXValue == true){
+      final date = DateTime.fromMillisecondsSinceEpoch(1648188901 * 1000)
+          .toString()
+          .split("T")
+          .first
+          .split("-");
+      final day = date[2].split(" ")[0];
+      final time = date[2].split(" ")[1].split(":").sublist(0,2).join(":");
+      return "${date[1]}-$day $time";
+    }
+    else{
+      final date = DateTime.fromMillisecondsSinceEpoch(timestamp)
+          .toIso8601String()
+          .split("T")
+          .first
+          .split("-");
+      return "${date[0]}-${date[1]}-${date[2]}";
     }
   }
 
