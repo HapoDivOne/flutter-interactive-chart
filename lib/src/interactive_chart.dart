@@ -310,7 +310,7 @@ class _InteractiveChartState extends State<InteractiveChart> {
 
   String defaultTimeLabel(int timestamp, int visibleDataCount) {
     if(widget.isShowMinuteXValue == true){
-      final date = DateTime.fromMillisecondsSinceEpoch(1648188901 * 1000)
+      final date = DateTime.fromMillisecondsSinceEpoch(timestamp)
           .toString()
           .split("T")
           .first
